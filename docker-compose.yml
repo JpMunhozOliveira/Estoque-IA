@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: estoque_user
+      POSTGRES_PASSWORD: estoque_pass
+      POSTGRES_DB: estoque_db
+    ports:
+      - "5432:5432"
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://estoque_user:estoque_pass@db:5432/estoque_db
