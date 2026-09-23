@@ -16,3 +16,5 @@ services:
       - db
     environment:
       DATABASE_URL: postgresql://estoque_user:estoque_pass@db:5432/estoque_db
+    volumes:
+      - .:/app
