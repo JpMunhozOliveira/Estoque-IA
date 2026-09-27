@@ -48,3 +48,35 @@ class ClienteResponse(ClienteBase):
 
     class Config:
         from_attributes = True
+
+class UsuarioBase(BaseModel):
+    nome: str
+    login: str
+    papel: str = "operador"
+
+class UsuarioCreate(UsuarioBase):
+    senha: str  # senha em texto puro, só na entrada — nunca fica salva assim
+
+class UsuarioResponse(UsuarioBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class MovimentacaoBase(BaseModel):
+    produto_id: int
+    usuario_id: int
+    cliente_id: Optional[int] = None
+    tipo: str  # "entrada" ou "saida"
+    quantidade: float
+    valor_unitario: float = 0
+
+class MovimentacaoCreate(MovimentacaoBase):
+    pass
+
+class MovimentacaoResponse(MovimentacaoBase):
+    id: int
+    data: datetime
+
+    class Config:
+        from_attributes = True

@@ -15,6 +15,16 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://estoque_user:estoque_pass@db:5432/estoque_db
+      DATABASE_URL: postgresql+psycopg2://estoque_user:estoque_pass@db:5432/estoque_db
     volumes:
       - .:/app
+
+  interface:
+    build: .
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    volumes:
+      - .:/app
+    command: streamlit run app/interface.py --server.address 0.0.0.0

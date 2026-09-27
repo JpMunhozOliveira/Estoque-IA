@@ -5,3 +5,7 @@ psycopg2-binary
 pydantic
 python-dotenv
 alembic
+passlib[bcrypt]
+streamlit
+requests
+pandas
