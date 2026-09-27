@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.database import SessionLocal
 from app.models import Movimentacao, Produto
 from app.schemas import MovimentacaoCreate, MovimentacaoResponse
@@ -37,7 +38,7 @@ def criar_movimentacao(mov: MovimentacaoCreate, db: Session = Depends(get_db)):
     return nova
 
 @router.get("/", response_model=list[MovimentacaoResponse])
-def listar_movimentacoes(produto_id: int = None, tipo: str = None, db: Session = Depends(get_db)):
+def listar_movimentacoes(produto_id: Optional[int] = None, tipo: Optional[str] = None, db: Session = Depends(get_db)):
     query = db.query(Movimentacao)
     if produto_id:
         query = query.filter(Movimentacao.produto_id == produto_id)

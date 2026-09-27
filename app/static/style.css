@@ -1,0 +1,32 @@
+body {
+  font-family: sans-serif;
+  margin: 40px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 30px;
+}
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+form input,
+form select {
+  margin: 4px;
+  padding: 6px;
+}
+form label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+form input,
+form select {
+  display: block;
+  margin-bottom: 4px;
+  padding: 6px;
+  width: 300px;
+}

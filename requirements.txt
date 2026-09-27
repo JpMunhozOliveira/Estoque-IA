@@ -6,6 +6,5 @@ pydantic
 python-dotenv
 alembic
 passlib[bcrypt]
-streamlit
-requests
-pandas
+jinja2
+python-multipart

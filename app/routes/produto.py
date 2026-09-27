@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.database import SessionLocal
 from app.models import Produto
 from app.schemas import ProdutoCreate, ProdutoResponse
-from typing import Optional
+from app.services import produto as produto_service
 
 router = APIRouter(prefix="/produtos", tags=["Produtos"])
 
@@ -16,15 +17,7 @@ def get_db():
 
 @router.post("/", response_model=ProdutoResponse)
 def criar_produto(produto: ProdutoCreate, db: Session = Depends(get_db)):
-    novo = Produto(**produto.model_dump())
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
-
-@router.get("/", response_model=list[ProdutoResponse])
-def listar_produtos(db: Session = Depends(get_db)):
-    return db.query(Produto).all()
+    return produto_service.criar_produto(db, produto.model_dump())
 
 @router.get("/", response_model=list[ProdutoResponse])
 def listar_produtos(
@@ -35,37 +28,19 @@ def listar_produtos(
     preco_max: Optional[float] = None,
     db: Session = Depends(get_db)
 ):
-    query = db.query(Produto)
-
-    if nome:
-        query = query.filter(Produto.nome.ilike(f"%{nome}%"))
-    if categoria:
-        query = query.filter(Produto.categoria == categoria)
-    if fornecedor_id:
-        query = query.filter(Produto.fornecedor_id == fornecedor_id)
-    if preco_min is not None:
-        query = query.filter(Produto.preco_venda >= preco_min)
-    if preco_max is not None:
-        query = query.filter(Produto.preco_venda <= preco_max)
-
-    return query.all()
+    return produto_service.listar_produtos(db, nome, categoria, fornecedor_id, preco_min, preco_max)
 
 @router.put("/{produto_id}", response_model=ProdutoResponse)
 def atualizar_produto(produto_id: int, dados: ProdutoCreate, db: Session = Depends(get_db)):
     produto = db.query(Produto).filter(Produto.id == produto_id).first()
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    for campo, valor in dados.model_dump().items():
-        setattr(produto, campo, valor)
-    db.commit()
-    db.refresh(produto)
-    return produto
+    return produto_service.atualizar_produto(db, produto, dados.model_dump())
 
 @router.delete("/{produto_id}")
 def remover_produto(produto_id: int, db: Session = Depends(get_db)):
     produto = db.query(Produto).filter(Produto.id == produto_id).first()
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    db.delete(produto)
-    db.commit()
+    produto_service.remover_produto(db, produto)
     return {"mensagem": "Produto removido com sucesso"}
