@@ -4,6 +4,7 @@ from typing import Optional
 from app.database import SessionLocal
 from app.models import Fornecedor
 from app.schemas import FornecedorCreate, FornecedorResponse
+from app.services import fornecedor as fornecedor_service
 
 router = APIRouter(prefix="/fornecedores", tags=["Fornecedores"])
 

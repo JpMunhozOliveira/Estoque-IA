@@ -4,6 +4,7 @@ from typing import Optional
 from app.database import SessionLocal
 from app.models import Cliente
 from app.schemas import ClienteCreate, ClienteResponse
+from app.services import cliente as cliente_service
 
 router = APIRouter(prefix="/clientes", tags=["Clientes"])
 

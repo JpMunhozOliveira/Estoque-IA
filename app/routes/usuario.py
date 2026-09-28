@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
-from passlib.context import CryptContext
 from app.database import SessionLocal
 from app.models import Usuario
 from app.schemas import UsuarioCreate, UsuarioResponse
+from app.services import usuario as usuario_service
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários"])
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_db():
     db = SessionLocal()
@@ -19,24 +17,11 @@ def get_db():
 
 @router.post("/", response_model=UsuarioResponse)
 def criar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
-    senha_hash = pwd_context.hash(usuario.senha)
-    novo = Usuario(
-        nome=usuario.nome,
-        login=usuario.login,
-        papel=usuario.papel,
-        senha_hash=senha_hash
-    )
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
+    return usuario_service.criar_usuario(db, usuario.nome, usuario.login, usuario.senha, usuario.papel)
 
 @router.get("/", response_model=list[UsuarioResponse])
 def listar_usuarios(nome: Optional[str] = None, db: Session = Depends(get_db)):
-    query = db.query(Usuario)
-    if nome:
-        query = query.filter(Usuario.nome.ilike(f"%{nome}%"))
-    return query.all()
+    return usuario_service.listar_usuarios(db, nome)
 
 @router.get("/{usuario_id}", response_model=UsuarioResponse)
 def buscar_usuario(usuario_id: int, db: Session = Depends(get_db)):
@@ -50,6 +35,5 @@ def remover_usuario(usuario_id: int, db: Session = Depends(get_db)):
     usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    db.delete(usuario)
-    db.commit()
+    usuario_service.remover_usuario(db, usuario)
     return {"mensagem": "Usuário removido com sucesso"}

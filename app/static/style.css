@@ -30,3 +30,10 @@ form select {
   padding: 6px;
   width: 300px;
 }
+nav {
+  margin-bottom: 20px;
+}
+nav a {
+  margin-right: 4px;
+  text-decoration: none;
+}

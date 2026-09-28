@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Estoque - Usuários</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include "_nav.html" %}
+    <h1>Usuários</h1>
+    <table>
+        <tr><th>Nome</th><th>Login</th><th>Papel</th><th>Ações</th></tr>
+        {% for u in usuarios %}
+        <tr>
+            <td>{{ u.nome }}</td>
+            <td>{{ u.login }}</td>
+            <td>{{ u.papel }}</td>
+            <td>
+                <form method="post" action="/usuarios/{{ u.id }}/remover" style="display:inline">
+                    <button type="submit">Remover</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Novo usuário</h2>
+    <form method="post" action="/usuarios/novo">
+        <label>Nome</label>
+        <input type="text" name="nome" required>
+        <label>Login</label>
+        <input type="text" name="login" required>
+        <label>Senha</label>
+        <input type="password" name="senha" required>
+        <label>Papel</label>
+        <select name="papel">
+            <option value="operador">Operador</option>
+            <option value="gestor">Gestor</option>
+        </select>
+        <button type="submit">Cadastrar</button>
+    </form>
+</body>
+</html>

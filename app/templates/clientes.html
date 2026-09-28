@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Estoque - clientes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include "_nav.html" %}
+    <h1>clientes</h1>
+    <table>
+        <tr><th>Nome</th><th>Contato</th><th>Ações</th></tr>
+        {% for f in clientes %}
+        <tr>
+            <td>{{ f.nome }}</td>
+            <td>{{ f.contato or "-" }}</td>
+            <td>
+                <a href="/clientes/{{ f.id }}/editar">Editar</a>
+                <form method="post" action="/clientes/{{ f.id }}/remover" style="display:inline">
+                    <button type="submit">Remover</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Novo cliente</h2>
+    <form method="post" action="/clientes/novo">
+        <label>Nome</label>
+        <input type="text" name="nome" required>
+        <label>Contato</label>
+        <input type="text" name="contato">
+        <button type="submit">Cadastrar</button>
+    </form>
+</body>
+</html>
