@@ -1,25 +1,26 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from fastapi import HTTPException
 from app.models import Movimentacao, Produto
+from app.schemas import MovimentacaoCreate
+from app.exceptions import RegraDeNegocioError, validar
 
 def criar_movimentacao(db: Session, dados: dict) -> Movimentacao:
-    produto = db.query(Produto).filter(Produto.id == dados["produto_id"]).first()
+    # O schema já garante: tipo "entrada"/"saida", quantidade > 0, valor >= 0
+    mov = validar(MovimentacaoCreate, dados)
+
+    produto = db.query(Produto).filter(Produto.id == mov.produto_id).first()
     if not produto:
-        raise HTTPException(status_code=404, detail="Produto não encontrado")
+        raise RegraDeNegocioError("Produto não encontrado", status_code=404)
 
-    if dados["tipo"] not in ("entrada", "saida"):
-        raise HTTPException(status_code=400, detail="Tipo deve ser 'entrada' ou 'saida'")
+    if mov.tipo == "saida" and produto.quantidade < mov.quantidade:
+        raise RegraDeNegocioError("Quantidade insuficiente em estoque", status_code=400)
 
-    if dados["tipo"] == "saida" and produto.quantidade < dados["quantidade"]:
-        raise HTTPException(status_code=400, detail="Quantidade insuficiente em estoque")
-
-    if dados["tipo"] == "entrada":
-        produto.quantidade += dados["quantidade"]
+    if mov.tipo == "entrada":
+        produto.quantidade += mov.quantidade
     else:
-        produto.quantidade -= dados["quantidade"]
+        produto.quantidade -= mov.quantidade
 
-    nova = Movimentacao(**dados)
+    nova = Movimentacao(**mov.model_dump())
     db.add(nova)
     db.commit()
     db.refresh(nova)

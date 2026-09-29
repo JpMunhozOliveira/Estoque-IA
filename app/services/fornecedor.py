@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.models import Fornecedor
+from app.models import Fornecedor, Produto
+from app.exceptions import RegraDeNegocioError
 
 def criar_fornecedor(db: Session, dados: dict) -> Fornecedor:
     novo = Fornecedor(**dados)
@@ -23,5 +24,11 @@ def atualizar_fornecedor(db: Session, fornecedor: Fornecedor, dados: dict) -> Fo
     return fornecedor
 
 def remover_fornecedor(db: Session, fornecedor: Fornecedor):
+    total = db.query(Produto).filter(Produto.fornecedor_id == fornecedor.id).count()
+    if total:
+        raise RegraDeNegocioError(
+            f"Não é possível remover: o fornecedor possui {total} produto(s) vinculado(s).",
+            status_code=409,
+        )
     db.delete(fornecedor)
     db.commit()

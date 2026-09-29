@@ -1,3 +1,4 @@
+from decimal import Decimal
 from fastapi import Request, Form, APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -16,10 +17,11 @@ def get_db():
     finally:
         db.close()
 
-def _dados_form(nome, categoria, quantidade, unidade, estoque_minimo, preco_custo, preco_venda, fornecedor_id):
+def _dados_form(nome, categoria, unidade, estoque_minimo, preco_custo, preco_venda, fornecedor_id):
+    # Sem "quantidade": o estoque só muda por Movimentação
     return {
-        "nome": nome, "categoria": categoria, "quantidade": quantidade,
-        "unidade": unidade, "estoque_minimo": estoque_minimo,
+        "nome": nome, "categoria": categoria, "unidade": unidade,
+        "estoque_minimo": estoque_minimo,
         "preco_custo": preco_custo, "preco_venda": preco_venda,
         "fornecedor_id": int(fornecedor_id) if fornecedor_id else None
     }
@@ -35,12 +37,12 @@ def pagina_produtos(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/novo")
 def criar_produto_form(
-    nome: str = Form(...), categoria: str = Form(""), quantidade: float = Form(0),
-    unidade: str = Form("unidade"), estoque_minimo: float = Form(0),
-    preco_custo: float = Form(0), preco_venda: float = Form(0),
+    nome: str = Form(...), categoria: str = Form(""),
+    unidade: str = Form("unidade"), estoque_minimo: Decimal = Form(Decimal("0")),
+    preco_custo: Decimal = Form(Decimal("0")), preco_venda: Decimal = Form(Decimal("0")),
     fornecedor_id: str = Form(""), db: Session = Depends(get_db)
 ):
-    dados = _dados_form(nome, categoria, quantidade, unidade, estoque_minimo, preco_custo, preco_venda, fornecedor_id)
+    dados = _dados_form(nome, categoria, unidade, estoque_minimo, preco_custo, preco_venda, fornecedor_id)
     produto_service.criar_produto(db, dados)
     return RedirectResponse(url="/produtos/pagina", status_code=303)
 
@@ -58,15 +60,15 @@ def editar_produto_form(produto_id: int, request: Request, db: Session = Depends
 @router.post("/{produto_id}/editar")
 def editar_produto_salvar(
     produto_id: int,
-    nome: str = Form(...), categoria: str = Form(""), quantidade: float = Form(0),
-    unidade: str = Form("unidade"), estoque_minimo: float = Form(0),
-    preco_custo: float = Form(0), preco_venda: float = Form(0),
+    nome: str = Form(...), categoria: str = Form(""),
+    unidade: str = Form("unidade"), estoque_minimo: Decimal = Form(Decimal("0")),
+    preco_custo: Decimal = Form(Decimal("0")), preco_venda: Decimal = Form(Decimal("0")),
     fornecedor_id: str = Form(""), db: Session = Depends(get_db)
 ):
     produto = db.query(Produto).filter(Produto.id == produto_id).first()
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
-    dados = _dados_form(nome, categoria, quantidade, unidade, estoque_minimo, preco_custo, preco_venda, fornecedor_id)
+    dados = _dados_form(nome, categoria, unidade, estoque_minimo, preco_custo, preco_venda, fornecedor_id)
     produto_service.atualizar_produto(db, produto, dados)
     return RedirectResponse(url="/produtos/pagina", status_code=303)
 

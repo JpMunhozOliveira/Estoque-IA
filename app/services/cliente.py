@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.models import Cliente
+from app.models import Cliente, Movimentacao
+from app.exceptions import RegraDeNegocioError
 
 def criar_cliente(db: Session, dados: dict) -> Cliente:
     novo = Cliente(**dados)
@@ -23,5 +24,11 @@ def atualizar_cliente(db: Session, cliente: Cliente, dados: dict) -> Cliente:
     return cliente
 
 def remover_cliente(db: Session, cliente: Cliente):
+    total = db.query(Movimentacao).filter(Movimentacao.cliente_id == cliente.id).count()
+    if total:
+        raise RegraDeNegocioError(
+            f"Não é possível remover: o cliente possui {total} movimentação(ões) registrada(s).",
+            status_code=409,
+        )
     db.delete(cliente)
     db.commit()

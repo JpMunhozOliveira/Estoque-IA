@@ -37,10 +37,10 @@
         </select>
 
         <label>Quantidade</label>
-        <input type="number" step="0.01" name="quantidade" required>
+        <input type="number" step="0.001" min="0.001" name="quantidade" required>
 
         <label>Valor unitário</label>
-        <input type="number" step="0.01" name="valor_unitario" value="0">
+        <input type="number" step="0.01" name="valor_unitario" min="0" value="0">
 
         <label>Usuário responsável</label>
         <select name="usuario_id" required>

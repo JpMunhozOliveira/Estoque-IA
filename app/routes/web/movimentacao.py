@@ -1,3 +1,4 @@
+from decimal import Decimal
 from fastapi import Request, Form, APIRouter, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -34,7 +35,7 @@ def pagina_movimentacoes(request: Request, db: Session = Depends(get_db)):
 def criar_movimentacao_form(
     produto_id: int = Form(...), usuario_id: int = Form(...),
     cliente_id: str = Form(""), tipo: str = Form(...),
-    quantidade: float = Form(...), valor_unitario: float = Form(0),
+    quantidade: Decimal = Form(...), valor_unitario: Decimal = Form(Decimal("0")),
     db: Session = Depends(get_db)
 ):
     dados = {
