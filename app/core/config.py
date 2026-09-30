@@ -16,3 +16,5 @@ HTTPS_ONLY = os.getenv("HTTPS_ONLY", "false").lower() == "true"
 BACKUP_DIR = Path(os.getenv("BACKUP_DIR", "/app/backups"))
 BACKUP_TIMEOUT_SECONDS = int(os.getenv("BACKUP_TIMEOUT_SECONDS", "300"))
 BACKUP_MAX_SIZE_MB = int(os.getenv("BACKUP_MAX_SIZE_MB", "50"))
+
+DOCS_ATIVAS = os.getenv("DOCS_ATIVAS", "false").lower() == "true"

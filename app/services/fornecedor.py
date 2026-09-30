@@ -1,27 +1,30 @@
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.models.models import Fornecedor, Produto
-from app.core.exceptions import RegraDeNegocioError
+from app.schemas.schemas import FornecedorCreate
+from app.core.exceptions import RegraDeNegocioError, validar
 
 def criar_fornecedor(db: Session, dados: dict) -> Fornecedor:
-    novo = Fornecedor(**dados)
+    f = validar(FornecedorCreate, dados)
+    novo = Fornecedor(**f.model_dump())
     db.add(novo)
     db.commit()
     db.refresh(novo)
     return novo
+
+def atualizar_fornecedor(db: Session, fornecedor: Fornecedor, dados: dict) -> Fornecedor:
+    f = validar(FornecedorCreate, dados)
+    for campo, valor in f.model_dump().items():
+        setattr(fornecedor, campo, valor)
+    db.commit()
+    db.refresh(fornecedor)
+    return fornecedor
 
 def listar_fornecedores(db: Session, nome: Optional[str] = None):
     query = db.query(Fornecedor)
     if nome:
         query = query.filter(Fornecedor.nome.ilike(f"%{nome}%"))
     return query.all()
-
-def atualizar_fornecedor(db: Session, fornecedor: Fornecedor, dados: dict) -> Fornecedor:
-    for campo, valor in dados.items():
-        setattr(fornecedor, campo, valor)
-    db.commit()
-    db.refresh(fornecedor)
-    return fornecedor
 
 def remover_fornecedor(db: Session, fornecedor: Fornecedor):
     total = db.query(Produto).filter(Produto.fornecedor_id == fornecedor.id).count()

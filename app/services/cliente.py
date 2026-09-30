@@ -1,27 +1,30 @@
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.models.models import Cliente, Movimentacao
-from app.core.exceptions import RegraDeNegocioError
+from app.schemas.schemas import ClienteCreate
+from app.core.exceptions import RegraDeNegocioError, validar
 
 def criar_cliente(db: Session, dados: dict) -> Cliente:
-    novo = Cliente(**dados)
+    c = validar(ClienteCreate, dados)
+    novo = Cliente(**c.model_dump())
     db.add(novo)
     db.commit()
     db.refresh(novo)
     return novo
+
+def atualizar_cliente(db: Session, cliente: Cliente, dados: dict) -> Cliente:
+    c = validar(ClienteCreate, dados)
+    for campo, valor in c.model_dump().items():
+        setattr(cliente, campo, valor)
+    db.commit()
+    db.refresh(cliente)
+    return cliente
 
 def listar_clientes(db: Session, nome: Optional[str] = None):
     query = db.query(Cliente)
     if nome:
         query = query.filter(Cliente.nome.ilike(f"%{nome}%"))
     return query.all()
-
-def atualizar_cliente(db: Session, cliente: Cliente, dados: dict) -> Cliente:
-    for campo, valor in dados.items():
-        setattr(cliente, campo, valor)
-    db.commit()
-    db.refresh(cliente)
-    return cliente
 
 def remover_cliente(db: Session, cliente: Cliente):
     total = db.query(Movimentacao).filter(Movimentacao.cliente_id == cliente.id).count()

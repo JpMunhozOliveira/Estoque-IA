@@ -18,7 +18,7 @@ def _dados_form(nome, categoria, unidade, estoque_minimo, preco_custo, preco_ven
         "nome": nome, "categoria": categoria, "unidade": unidade,
         "estoque_minimo": estoque_minimo,
         "preco_custo": preco_custo, "preco_venda": preco_venda,
-        "fornecedor_id": int(fornecedor_id) if fornecedor_id else None
+        "fornecedor_id": fornecedor_id or None
     }
 
 @router.get("/pagina")

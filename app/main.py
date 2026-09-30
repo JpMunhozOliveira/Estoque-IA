@@ -13,9 +13,10 @@ from app.api.movimentacao import router as movimentacao_router
 from app.api.produto import router as produto_router
 from app.api.usuario import router as usuario_router
 from app.core.auth import controle_de_acesso, usuario_atual
-from app.core.config import HTTPS_ONLY, SECRET_KEY
+from app.core.config import DOCS_ATIVAS, HTTPS_ONLY, SECRET_KEY
 from app.core.csrf import verificar_csrf
 from app.core.exceptions import NaoAutenticadoError, RegraDeNegocioError
+from app.core.validacao import rejeitar_nul   # novo import (passo 2)
 from app.db.database import SessionLocal, get_db
 from app.services import produto as produto_service
 from app.services import usuario as usuario_service
@@ -34,8 +35,13 @@ async def lifespan(app: FastAPI):
         usuario_service.criar_gestor_inicial(db)
     yield
 
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url="/docs" if DOCS_ATIVAS else None,
+    redoc_url="/redoc" if DOCS_ATIVAS else None,
+    openapi_url="/openapi.json" if DOCS_ATIVAS else None,
+)
 
-app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="app/templates")
 
 app.add_middleware(
@@ -46,11 +52,12 @@ app.add_middleware(
     https_only=HTTPS_ONLY,
 )
 
+protegido = [Depends(controle_de_acesso), Depends(verificar_csrf), Depends(rejeitar_nul)]
 
-@app.get("/")
+@app.get("/", dependencies=protegido)
 def read_root(
-    request: Request,
-    db: Session = Depends(get_db),
+    request: Request, db: 
+    Session = Depends(get_db)
 ):
     alertas = produto_service.listar_produtos(db, abaixo_minimo=True)
     return templates.TemplateResponse(
@@ -59,10 +66,8 @@ def read_root(
         {"alertas": alertas},
     )
 
-
 def _quer_html(request: Request) -> bool:
     return "text/html" in request.headers.get("accept", "")
-
 
 @app.exception_handler(RegraDeNegocioError)
 def tratar_regra_de_negocio(request: Request, erro: RegraDeNegocioError):
@@ -75,18 +80,15 @@ def tratar_regra_de_negocio(request: Request, erro: RegraDeNegocioError):
         )
     return JSONResponse(status_code=erro.status_code, content={"detail": erro.mensagem})
 
-
 @app.exception_handler(NaoAutenticadoError)
 def tratar_nao_autenticado(request: Request, erro: NaoAutenticadoError):
     if _quer_html(request):
         return RedirectResponse(url="/login", status_code=303)
     return JSONResponse(status_code=401, content={"detail": "Não autenticado"})
 
-
 # Login e logout possuem tratamento próprio de autenticação.
 app.include_router(auth_web_router)
 
-protegido = [Depends(controle_de_acesso), Depends(verificar_csrf)]
 
 for router in (
     produto_web_router,
@@ -100,9 +102,7 @@ for router in (
     usuario_router,
     movimentacao_router,
     backup_web_router,
-    produto_web_router,
 ):
     app.include_router(router, dependencies=protegido)
-
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

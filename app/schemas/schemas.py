@@ -1,9 +1,10 @@
 from decimal import Decimal
 from typing import Annotated, Literal, Optional
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 
-# Tipos reutilizáveis: a regra fica definida uma vez só e vale em todos os campos
+Nome = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+TextoOpcional = Optional[Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)]]
 Dinheiro = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=2)]
 Quantidade = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=3)]
 QuantidadeMovimentada = Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=3)]
@@ -12,8 +13,8 @@ TipoMovimentacao = Literal["entrada", "saida"]
 # Produtos
 
 class ProdutoBase(BaseModel):
-    nome: str
-    categoria: Optional[str] = None
+    nome: Nome
+    categoria: TextoOpcional = None
     unidade: str = "unidade"
     estoque_minimo: Quantidade = Decimal("0")
     preco_custo: Dinheiro = Decimal("0")
@@ -34,8 +35,8 @@ class ProdutoResponse(ProdutoBase):
 # Fornecedores
 
 class FornecedorBase(BaseModel):
-    nome: str
-    contato: Optional[str] = None
+    nome: Nome
+    contato: TextoOpcional = None
 
 class FornecedorCreate(FornecedorBase):
     pass
@@ -47,8 +48,8 @@ class FornecedorResponse(FornecedorBase):
 # Clientes
 
 class ClienteBase(BaseModel):
-    nome: str
-    contato: Optional[str] = None
+    nome: Nome
+    contato: TextoOpcional = None
 
 class ClienteCreate(ClienteBase):
     pass
@@ -60,7 +61,12 @@ class ClienteResponse(ClienteBase):
 # Usuários
 
 Papel = Literal["operador", "gestor"]
-Senha = Annotated[str, Field(min_length=6, max_length=72)]  # 72 = limite do bcrypt
+def _senha_cabe_no_bcrypt(senha: str) -> str:
+    if len(senha.encode("utf-8")) > 72:
+        raise ValueError("a senha deve ter no máximo 72 bytes (acentos contam mais de 1)")
+    return senha
+
+Senha = Annotated[str, Field(min_length=6, max_length=72), AfterValidator(_senha_cabe_no_bcrypt)]
 
 class UsuarioBase(BaseModel):
     nome: str = Field(min_length=1)
@@ -76,6 +82,7 @@ class SenhaNova(BaseModel):
 class UsuarioResponse(UsuarioBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+
 
 # Movimentações
 

@@ -13,7 +13,10 @@ router = APIRouter(prefix="/movimentacoes", tags=["Movimentações - Web"])
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/pagina")
-def pagina_movimentacoes(request: Request, db: Session = Depends(get_db)):
+def pagina_movimentacoes(
+    request: Request, 
+    db: Session = Depends(get_db)
+):
     return templates.TemplateResponse(request, "movimentacoes/index.html", {
         "movimentacoes": movimentacao_service.listar_movimentacoes(db),
         "produtos": db.query(Produto).order_by(Produto.nome).all(),
@@ -22,13 +25,20 @@ def pagina_movimentacoes(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/nova")
 def criar_movimentacao_form(
-    produto_id: int = Form(...), cliente_id: str = Form(""), tipo: str = Form(...),
-    quantidade: Decimal = Form(...), valor_unitario: Decimal = Form(Decimal("0")),
-    db: Session = Depends(get_db), usuario: Usuario = Depends(usuario_atual)
+    produto_id: int = Form(...), 
+    cliente_id: str = Form(""), 
+    tipo: str = Form(...),
+    quantidade: Decimal = Form(...), 
+    valor_unitario: Decimal = Form(Decimal("0")),
+    db: Session = Depends(get_db), 
+    usuario: Usuario = Depends(usuario_atual)
 ):
     dados = {
-        "produto_id": produto_id, "cliente_id": int(cliente_id) if cliente_id else None,
-        "tipo": tipo, "quantidade": quantidade, "valor_unitario": valor_unitario,
+        "produto_id": produto_id, 
+        "cliente_id": cliente_id or None,
+        "tipo": tipo, 
+        "quantidade": quantidade, 
+        "valor_unitario": valor_unitario,
     }
     movimentacao_service.criar_movimentacao(db, dados, usuario.id)
     return RedirectResponse(url="/movimentacoes/pagina", status_code=303)

@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+
 from app.models.models import Usuario, Movimentacao
 from app.schemas.schemas import UsuarioCreate, SenhaNova
 from app.core.exceptions import RegraDeNegocioError, validar
@@ -32,6 +33,10 @@ def criar_usuario(db: Session, nome: str, login: str, senha: str, papel: str = "
     return novo
 
 def autenticar(db: Session, login: str, senha: str) -> Optional[Usuario]:
+    if "\x00" in login or "\x00" in senha:
+        pwd_context.verify("x", _HASH_FALSO)   # mantém o tempo de resposta parecido
+        return None
+    
     usuario = db.query(Usuario).filter(Usuario.login == login.strip()).first()
     senha_ok = pwd_context.verify(senha, usuario.senha_hash if usuario else _HASH_FALSO)
     return usuario if (usuario and senha_ok) else None
