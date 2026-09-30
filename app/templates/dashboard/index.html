@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Estoque - Início</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    {% include "base/nav.html" %}
+    <h1>Sistema de Estoque</h1>
+    <p>Selecione uma área acima para começar.</p>
+    {% if alertas %}
+    <div class="aviso">
+        <strong>Estoque abaixo do mínimo ({{ alertas|length }}):</strong>
+        <ul>
+            {% for p in alertas %}
+            <li>{{ p.nome }}: {{ p.quantidade }} {{ p.unidade }} (mínimo {{ p.estoque_minimo }})</li>
+            {% endfor %}
+        </ul>
+        <a href="/produtos/pagina?abaixo_minimo=true">Ver na lista de produtos</a>
+    </div>
+    {% endif %}
+</body>
+
+</html>

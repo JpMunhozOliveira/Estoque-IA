@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editar Fornecedor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include "base/nav.html" %}
+    <h1>Editar Fornecedor</h1>
+    <form method="post" action="/fornecedores/{{ fornecedor.id }}/editar">
+        <label>Nome</label>
+        <input type="text" name="nome" value="{{ fornecedor.nome }}" required>
+        <label>Contato</label>
+        <input type="text" name="contato" value="{{ fornecedor.contato or '' }}">
+        <button type="submit">Salvar</button>
+    </form>
+    <a href="/fornecedores/pagina">Voltar</a>
+</body>
+</html>

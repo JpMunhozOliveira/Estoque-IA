@@ -1,32 +1,30 @@
 from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.middleware.sessions import SessionMiddleware
-from app.auth import controle_de_acesso, usuario_atual
-from app.config import SECRET_KEY
-from app.database import SessionLocal
-from app.exceptions import RegraDeNegocioError, NaoAutenticadoError
-from app.services import usuario as usuario_service
-from app.routes.produto import router as produto_router
-from app.routes.fornecedor import router as fornecedor_router
-from app.routes.cliente import router as cliente_router
-from app.routes.usuario import router as usuario_router
-from app.routes.movimentacao import router as movimentacao_router
-from app.routes.web.auth import router as auth_web_router
-from app.routes.web.produto import router as produto_web_router
-from app.routes.web.fornecedor import router as fornecedor_web_router
-from app.routes.web.cliente import router as cliente_web_router
-from app.routes.web.usuario import router as usuario_web_router
-from app.routes.web.movimentacao import router as movimentacao_web_router
-from app.csrf import verificar_csrf
-from app.config import SECRET_KEY, HTTPS_ONLY
 from sqlalchemy.orm import Session
-from app.database import SessionLocal, get_db
-from app.services import produto as produto_service
+from starlette.middleware.sessions import SessionMiddleware
 
-# As tabelas são criadas e alteradas só pelo Alembic (alembic upgrade head).
+from app.api.cliente import router as cliente_router
+from app.api.fornecedor import router as fornecedor_router
+from app.api.movimentacao import router as movimentacao_router
+from app.api.produto import router as produto_router
+from app.api.usuario import router as usuario_router
+from app.core.auth import controle_de_acesso, usuario_atual
+from app.core.config import HTTPS_ONLY, SECRET_KEY
+from app.core.csrf import verificar_csrf
+from app.core.exceptions import NaoAutenticadoError, RegraDeNegocioError
+from app.db.database import SessionLocal, get_db
+from app.services import produto as produto_service
+from app.services import usuario as usuario_service
+from app.web.auth import router as auth_web_router
+from app.web.cliente import router as cliente_web_router
+from app.web.fornecedor import router as fornecedor_web_router
+from app.web.movimentacao import router as movimentacao_web_router
+from app.web.produto import router as produto_web_router
+from app.web.usuario import router as usuario_web_router
 
 
 @asynccontextmanager
@@ -37,16 +35,30 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-# em produção com HTTPS, acrescente https_only=True
 templates = Jinja2Templates(directory="app/templates")
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, max_age=60 * 60 * 8,same_site="lax", https_only=HTTPS_ONLY)
-protegido = [Depends(controle_de_acesso), Depends(verificar_csrf)]
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    max_age=60 * 60 * 8,
+    same_site="lax",
+    https_only=HTTPS_ONLY,
+)
 
 
 @app.get("/")
-def read_root(request: Request, usuario=Depends(usuario_atual), db: Session = Depends(get_db)):
+def read_root(
+    request: Request,
+    usuario=Depends(usuario_atual),
+    db: Session = Depends(get_db),
+):
     alertas = produto_service.listar_produtos(db, abaixo_minimo=True)
-    return templates.TemplateResponse(request, "index.html", {"alertas": alertas})
+    return templates.TemplateResponse(
+        request,
+        "dashboard/index.html",
+        {"alertas": alertas},
+    )
+
 
 def _quer_html(request: Request) -> bool:
     return "text/html" in request.headers.get("accept", "")
@@ -56,7 +68,10 @@ def _quer_html(request: Request) -> bool:
 def tratar_regra_de_negocio(request: Request, erro: RegraDeNegocioError):
     if _quer_html(request):
         return templates.TemplateResponse(
-            request, "erro.html", {"mensagem": erro.mensagem}, status_code=erro.status_code
+            request,
+            "erros/erro.html",
+            {"mensagem": erro.mensagem},
+            status_code=erro.status_code,
         )
     return JSONResponse(status_code=erro.status_code, content={"detail": erro.mensagem})
 
@@ -68,20 +83,24 @@ def tratar_nao_autenticado(request: Request, erro: NaoAutenticadoError):
     return JSONResponse(status_code=401, content={"detail": "Não autenticado"})
 
 
-# /login e /logout são os únicos sem proteção
+# Login e logout possuem tratamento próprio de autenticação.
 app.include_router(auth_web_router)
 
-protegido = [Depends(controle_de_acesso)]
-for r in (
-    produto_web_router, fornecedor_web_router, cliente_web_router, usuario_web_router,
-    movimentacao_web_router, produto_router, fornecedor_router, cliente_router,
-    usuario_router, movimentacao_router,
+protegido = [Depends(controle_de_acesso), Depends(verificar_csrf)]
+
+for router in (
+    produto_web_router,
+    fornecedor_web_router,
+    cliente_web_router,
+    usuario_web_router,
+    movimentacao_web_router,
+    produto_router,
+    fornecedor_router,
+    cliente_router,
+    usuario_router,
+    movimentacao_router,
 ):
-    app.include_router(r, dependencies=protegido)
+    app.include_router(router, dependencies=protegido)
+
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-
-@app.get("/")
-def read_root(request: Request, usuario=Depends(usuario_atual)):
-    return templates.TemplateResponse(request, "index.html", {})

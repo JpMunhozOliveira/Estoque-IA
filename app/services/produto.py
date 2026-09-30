@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.models import Produto, Fornecedor, Movimentacao
-from app.schemas import ProdutoCreate
-from app.exceptions import RegraDeNegocioError, validar
+from app.models.models import Produto, Fornecedor, Movimentacao
+from app.schemas.schemas import ProdutoCreate
+from app.core.exceptions import RegraDeNegocioError, validar
 
 def _checar_fornecedor(db: Session, fornecedor_id):
     if fornecedor_id and not db.query(Fornecedor).filter(Fornecedor.id == fornecedor_id).first():

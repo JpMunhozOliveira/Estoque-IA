@@ -3,9 +3,9 @@ from typing import Optional
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from app.models import Usuario, Movimentacao
-from app.schemas import UsuarioCreate, SenhaNova
-from app.exceptions import RegraDeNegocioError, validar
+from app.models.models import Usuario, Movimentacao
+from app.schemas.schemas import UsuarioCreate, SenhaNova
+from app.core.exceptions import RegraDeNegocioError, validar
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Usado quando o login não existe, para o tempo de resposta não revelar quais logins existem

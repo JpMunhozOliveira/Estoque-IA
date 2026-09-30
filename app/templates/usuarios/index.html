@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Estoque - Usuários</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    {% include "base/nav.html" %}
+    {% set eh_gestor = request.session.get("papel") == "gestor" %}
+    <h1>Usuários</h1>
+    <table>
+        <tr>
+            <th>Nome</th>
+            <th>Login</th>
+            <th>Papel</th>
+            {% if eh_gestor %}<th>Ações</th>{% endif %}
+        </tr>
+        {% for u in usuarios %}
+        <tr>
+            <td>{{ u.nome }}</td>
+            <td>{{ u.login }}</td>
+            <td>{{ u.papel }}</td>
+            {% if eh_gestor %}
+            <td>
+                <a href="/usuarios/{{ u.id }}/redefinir-senha">Redefinir senha</a>
+                <form method="post" action="/usuarios/{{ u.id }}/remover" style="display:inline">
+                    <button type="submit">Remover</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% if eh_gestor %}
+    <h2>Novo usuário</h2>
+    <form method="post" action="/usuarios/novo">
+        {% include "base/csrf.html" %}
+        <label>Nome</label>
+        <input type="text" name="nome" required>
+        <label>Login</label>
+        <input type="text" name="login" required>
+        <label>Senha</label>
+        <input type="password" name="senha" required>
+        <label>Papel</label>
+        <select name="papel">
+            <option value="operador">Operador</option>
+            <option value="gestor">Gestor</option>
+        </select>
+        <button type="submit">Cadastrar</button>
+    </form>
+    {% endif %}
+</body>
+
+</html>

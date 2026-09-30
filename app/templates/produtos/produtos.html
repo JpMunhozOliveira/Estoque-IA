@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Estoque - Produtos</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    {% include "base/nav.html" %}
+    {% set eh_gestor = request.session.get("papel") == "gestor" %}
+    <h1>Produtos</h1>
+
+    <p>
+        {% if abaixo_minimo %}<a href="/produtos/pagina">Ver todos</a>
+        {% else %}<a href="/produtos/pagina?abaixo_minimo=true">Ver só os abaixo do mínimo</a>{% endif %}
+    </p>
+
+    <table>
+        <tr>
+            <th>Nome</th>
+            <th>Categoria</th>
+            <th>Quantidade</th>
+            <th>Mínimo</th>
+            <th>Fornecedor</th>
+            {% if eh_gestor %}<th>Ações</th>{% endif %}
+        </tr>
+        {% for produto in produtos %}
+        <tr {% if produto.abaixo_do_minimo %}class="alerta"{% endif %}>
+            <td>{{ produto.nome }}</td>
+            <td>{{ produto.categoria or "-" }}</td>
+            <td>{{ produto.quantidade }} {{ produto.unidade }}</td>
+            <td>{{ produto.estoque_minimo }} {{ produto.unidade }}</td>
+            <td>{{ produto.fornecedor.nome if produto.fornecedor else "-" }}</td>
+            {% if eh_gestor %}
+            <td>
+                <a href="/produtos/{{ produto.id }}/editar">Editar</a>
+                <form method="post" action="/produtos/{{ produto.id }}/remover" style="display:inline">
+                    <button type="submit">Remover</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% if eh_gestor %}
+    <h2>Novo produto</h2>
+    <form method="post" action="/produtos/novo">
+        {% include "base/csrf.html" %}
+        <label>Nome</label>
+        <input type="text" name="nome" required>
+
+        <label>Categoria</label>
+        <input type="text" name="categoria">
+
+        <label>Unidade</label>
+        <input type="text" name="unidade" value="unidade">
+
+        <label>Estoque mínimo</label>
+        <input type="number" step="0.001" name="estoque_minimo" min="0" value="0">
+
+        <label>Preço de custo</label>
+        <input type="number" step="0.01" name="preco_custo" min="0" value="0">
+
+        <label>Preço de venda</label>
+        <input type="number" step="0.01" name="preco_venda" min="0" value="0">
+
+        <label>Fornecedor</label>
+        <select name="fornecedor_id">
+            <option value="">Nenhum</option>
+            {% for f in fornecedores %}
+            <option value="{{ f.id }}">{{ f.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <p><small>O produto começa com estoque 0. Para dar entrada no estoque, use a página de Movimentações.</small>
+        </p>
+        <button type="submit">Cadastrar</button>
+    </form>
+    {% endif %}
+</body>
+
+</html>

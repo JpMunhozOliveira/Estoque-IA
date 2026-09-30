@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.models import Fornecedor, Produto
-from app.exceptions import RegraDeNegocioError
+from app.models.models import Fornecedor, Produto
+from app.core.exceptions import RegraDeNegocioError
 
 def criar_fornecedor(db: Session, dados: dict) -> Fornecedor:
     novo = Fornecedor(**dados)

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.models import Cliente, Movimentacao
-from app.exceptions import RegraDeNegocioError
+from app.models.models import Cliente, Movimentacao
+from app.core.exceptions import RegraDeNegocioError
 
 def criar_cliente(db: Session, dados: dict) -> Cliente:
     novo = Cliente(**dados)

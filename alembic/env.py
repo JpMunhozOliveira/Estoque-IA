@@ -1,7 +1,7 @@
 import os
 
-from app.database import Base
-from app.models import Produto, Fornecedor, Cliente, Usuario, Movimentacao
+from app.db.database import Base
+from app.models.models import Produto, Fornecedor, Cliente, Usuario, Movimentacao
 
 from logging.config import fileConfig
 

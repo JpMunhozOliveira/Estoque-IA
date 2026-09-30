@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.models import Movimentacao, Produto
-from app.schemas import MovimentacaoCreate
-from app.exceptions import RegraDeNegocioError, validar
-from app.models import Movimentacao, Produto, Cliente
+from app.models.models import Movimentacao, Produto
+from app.schemas.schemas import MovimentacaoCreate
+from app.core.exceptions import RegraDeNegocioError, validar
+from app.models.models import Movimentacao, Produto, Cliente
 
 def criar_movimentacao(db: Session, dados: dict, usuario_id: int) -> Movimentacao:
     mov = validar(MovimentacaoCreate, dados)
