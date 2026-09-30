@@ -3,3 +3,7 @@ __pycache__/
 .env
 venv/
 .venv/
+
+backups/*.sql
+backups/*.dump
+backups/*.tmp

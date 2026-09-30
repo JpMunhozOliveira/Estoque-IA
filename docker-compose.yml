@@ -24,3 +24,4 @@ services:
       - .env
     volumes:
       - .:/app
+      - ./backups:/app/backups

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Estoque - Backups</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    {% include "base/nav.html" %}
+
+    <h1>Backups do banco de dados</h1>
+    <p>
+        Gere um backup completo do sistema. O arquivo será salvo no servidor
+        e baixado automaticamente.
+    </p>
+
+    <form method="post" action="/backups/gerar">
+        {% include "base/csrf.html" %}
+        <button type="submit">Gerar e baixar backup</button>
+    </form>
+
+    <h2>Backups salvos</h2>
+
+    {% if backups %}
+    <table>
+        <tr>
+            <th>Arquivo</th>
+            <th>Data</th>
+            <th>Tamanho</th>
+            <th>Ação</th>
+        </tr>
+        {% for backup in backups %}
+        <tr>
+            <td>{{ backup.nome }}</td>
+            <td>{{ backup.criado_em.strftime("%d/%m/%Y %H:%M:%S") }}</td>
+            <td>{{ "%.2f"|format(backup.tamanho / 1024 / 1024) }} MB</td>
+            <td>
+                <a href="/backups/{{ backup.nome }}/download">Baixar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Restaurar backup</h2>
+    <div class="aviso">
+        <strong>Atenção:</strong> restaurar um backup substitui os dados atuais
+        do banco. Você será desconectado após a operação.
+    </div>
+
+    <form method="post" action="/backups/restaurar">
+        {% include "base/csrf.html" %}
+
+        <label>Backup a restaurar</label>
+        <select name="nome" required>
+            {% for backup in backups %}
+            <option value="{{ backup.nome }}">{{ backup.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <label>
+            Para confirmar, digite exatamente o nome do backup selecionado
+        </label>
+        <input type="text" name="confirmar_nome" required>
+
+        <button type="submit">Restaurar backup</button>
+    </form>
+    {% else %}
+    <p>Nenhum backup foi gerado ainda.</p>
+    {% endif %}
+
+    <h2>Enviar backup existente</h2>
+    <p>
+        Envie somente arquivos SQL confiáveis, gerados pelo PostgreSQL.
+        O limite é de 50 MB.
+    </p>
+
+    <form method="post" action="/backups/enviar" enctype="multipart/form-data">
+        {% include "base/csrf.html" %}
+        <label>Arquivo de backup (.sql)</label>
+        <input type="file" name="arquivo" accept=".sql" required>
+        <button type="submit">Enviar backup</button>
+    </form>
+
+</body>
+
+</html>

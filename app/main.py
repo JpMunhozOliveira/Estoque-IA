@@ -25,6 +25,7 @@ from app.web.fornecedor import router as fornecedor_web_router
 from app.web.movimentacao import router as movimentacao_web_router
 from app.web.produto import router as produto_web_router
 from app.web.usuario import router as usuario_web_router
+from app.web.backup import router as backup_web_router
 
 
 @asynccontextmanager
@@ -49,7 +50,6 @@ app.add_middleware(
 @app.get("/")
 def read_root(
     request: Request,
-    usuario=Depends(usuario_atual),
     db: Session = Depends(get_db),
 ):
     alertas = produto_service.listar_produtos(db, abaixo_minimo=True)
@@ -99,6 +99,8 @@ for router in (
     cliente_router,
     usuario_router,
     movimentacao_router,
+    backup_web_router,
+    produto_web_router,
 ):
     app.include_router(router, dependencies=protegido)
 

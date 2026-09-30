@@ -28,6 +28,13 @@ def controle_de_acesso(
         return usuario
 
     caminho = request.url.path
+
+    if caminho == "/backups" or caminho.startswith("/backups/"):
+        raise RegraDeNegocioError(
+        "Acesso negado: esta ação é permitida apenas para gestores.",
+        status_code=403,
+        )
+
     leitura = (request.method in ("GET", "HEAD", "OPTIONS") and not caminho.endswith(("/editar", "/redefinir-senha")))
     if leitura or (request.method, caminho) in OPERADOR_PODE:
         return usuario
