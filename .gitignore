@@ -7,3 +7,7 @@ venv/
 backups/*.sql
 backups/*.dump
 backups/*.tmp
+
+.pytest_cache/
+.coverage
+htmlcov/
