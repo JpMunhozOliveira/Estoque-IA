@@ -3,14 +3,20 @@ from typing import Optional
 from app.models import Movimentacao, Produto
 from app.schemas import MovimentacaoCreate
 from app.exceptions import RegraDeNegocioError, validar
+from app.models import Movimentacao, Produto, Cliente
 
-def criar_movimentacao(db: Session, dados: dict) -> Movimentacao:
-    # O schema já garante: tipo "entrada"/"saida", quantidade > 0, valor >= 0
+def criar_movimentacao(db: Session, dados: dict, usuario_id: int) -> Movimentacao:
     mov = validar(MovimentacaoCreate, dados)
 
-    produto = db.query(Produto).filter(Produto.id == mov.produto_id).first()
+    # with_for_update trava a linha: duas saídas simultâneas não passam da validação juntas
+    produto = (
+        db.query(Produto).filter(Produto.id == mov.produto_id).with_for_update().first()
+    )
     if not produto:
         raise RegraDeNegocioError("Produto não encontrado", status_code=404)
+
+    if mov.cliente_id and not db.get(Cliente, mov.cliente_id):
+        raise RegraDeNegocioError("Cliente não encontrado", status_code=404)
 
     if mov.tipo == "saida" and produto.quantidade < mov.quantidade:
         raise RegraDeNegocioError("Quantidade insuficiente em estoque", status_code=400)
@@ -20,7 +26,7 @@ def criar_movimentacao(db: Session, dados: dict) -> Movimentacao:
     else:
         produto.quantidade -= mov.quantidade
 
-    nova = Movimentacao(**mov.model_dump())
+    nova = Movimentacao(**mov.model_dump(), usuario_id=usuario_id)
     db.add(nova)
     db.commit()
     db.refresh(nova)

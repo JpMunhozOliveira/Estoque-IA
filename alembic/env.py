@@ -1,6 +1,5 @@
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from app.database import Base
 from app.models import Produto, Fornecedor, Cliente, Usuario, Movimentacao
@@ -45,7 +44,11 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = os.getenv("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL não definida")
+    
+    config.set_main_option("sqlalchemy.url", url)
     context.configure(
         url=url,
         target_metadata=target_metadata,
