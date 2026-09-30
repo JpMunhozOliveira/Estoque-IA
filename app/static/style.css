@@ -37,3 +37,12 @@ nav a {
   margin-right: 4px;
   text-decoration: none;
 }
+tr.alerta td {
+  background: #fff3cd;
+}
+.aviso {
+  border: 1px solid #e0b100;
+  background: #fff8e1;
+  padding: 10px 16px;
+  margin: 16px 0;
+}

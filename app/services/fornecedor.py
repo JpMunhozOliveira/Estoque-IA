@@ -32,3 +32,9 @@ def remover_fornecedor(db: Session, fornecedor: Fornecedor):
         )
     db.delete(fornecedor)
     db.commit()
+
+def buscar_fornecedor(db: Session, fornecedor_id: int) -> Fornecedor:
+    fornecedor = db.get(Fornecedor, fornecedor_id)
+    if not fornecedor:
+        raise RegraDeNegocioError("Fornecedor não encontrado", status_code=404)
+    return fornecedor

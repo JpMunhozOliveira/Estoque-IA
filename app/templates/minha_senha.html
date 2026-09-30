@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Estoque - Minha senha</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include "_nav.html" %}
+    <h1>Alterar minha senha</h1>
+    <form method="post" action="/usuarios/minha-senha">
+        {% include "_csrf.html" %}
+        <label>Senha atual</label>
+        <input type="password" name="senha_atual" required>
+        <label>Nova senha (6 a 72 caracteres)</label>
+        <input type="password" name="nova_senha" required minlength="6" maxlength="72">
+        <label>Confirmar nova senha</label>
+        <input type="password" name="confirmar" required minlength="6" maxlength="72">
+        <button type="submit">Salvar</button>
+    </form>
+</body>
+</html>

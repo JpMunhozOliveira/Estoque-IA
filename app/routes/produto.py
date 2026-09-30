@@ -19,6 +19,7 @@ def get_db():
 def criar_produto(produto: ProdutoCreate, db: Session = Depends(get_db)):
     return produto_service.criar_produto(db, produto.model_dump())
 
+
 @router.get("/", response_model=list[ProdutoResponse])
 def listar_produtos(
     nome: Optional[str] = None,
@@ -26,9 +27,11 @@ def listar_produtos(
     fornecedor_id: Optional[int] = None,
     preco_min: Optional[float] = None,
     preco_max: Optional[float] = None,
+    abaixo_minimo: bool = False,
     db: Session = Depends(get_db)
 ):
-    return produto_service.listar_produtos(db, nome, categoria, fornecedor_id, preco_min, preco_max)
+    return produto_service.listar_produtos(db, nome, categoria, fornecedor_id,
+                                       preco_min, preco_max, abaixo_minimo)
 
 @router.put("/{produto_id}", response_model=ProdutoResponse)
 def atualizar_produto(produto_id: int, dados: ProdutoCreate, db: Session = Depends(get_db)):

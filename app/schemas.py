@@ -63,8 +63,13 @@ class UsuarioBase(BaseModel):
     login: str = Field(min_length=1)
     papel: Papel = "operador"
 
+Senha = Annotated[str, Field(min_length=6, max_length=72)]  # 72 = limite do bcrypt
+
 class UsuarioCreate(UsuarioBase):
-    senha: str = Field(min_length=6, max_length=72)  # 72 = limite do bcrypt
+    senha: Senha
+
+class SenhaNova(BaseModel):
+    senha: Senha
 
 class UsuarioResponse(UsuarioBase):
     model_config = ConfigDict(from_attributes=True)

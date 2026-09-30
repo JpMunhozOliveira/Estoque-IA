@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from app.models import Usuario, Movimentacao
-from app.schemas import UsuarioCreate
+from app.schemas import UsuarioCreate, SenhaNova
 from app.exceptions import RegraDeNegocioError, validar
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -63,3 +63,22 @@ def criar_gestor_inicial(db: Session):
         print("AVISO: não há gestor cadastrado e ADMIN_LOGIN/ADMIN_SENHA não foram definidos.")
         return
     criar_usuario(db, "Administrador", login, senha, "gestor")
+
+def buscar_usuario(db: Session, usuario_id: int) -> Usuario:
+    usuario = db.get(Usuario, usuario_id)
+    if not usuario:
+        raise RegraDeNegocioError("Usuário não encontrado", status_code=404)
+    return usuario
+
+def _definir_senha(db: Session, usuario: Usuario, nova_senha: str):
+    dados = validar(SenhaNova, {"senha": nova_senha})
+    usuario.senha_hash = pwd_context.hash(dados.senha)
+    db.commit()
+
+def alterar_senha(db: Session, usuario: Usuario, senha_atual: str, nova_senha: str):
+    if not pwd_context.verify(senha_atual, usuario.senha_hash):
+        raise RegraDeNegocioError("Senha atual incorreta.", status_code=400)
+    _definir_senha(db, usuario, nova_senha)
+
+def redefinir_senha(db: Session, usuario: Usuario, nova_senha: str):
+    _definir_senha(db, usuario, nova_senha)

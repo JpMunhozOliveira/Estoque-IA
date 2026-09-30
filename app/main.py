@@ -20,6 +20,11 @@ from app.routes.web.fornecedor import router as fornecedor_web_router
 from app.routes.web.cliente import router as cliente_web_router
 from app.routes.web.usuario import router as usuario_web_router
 from app.routes.web.movimentacao import router as movimentacao_web_router
+from app.csrf import verificar_csrf
+from app.config import SECRET_KEY, HTTPS_ONLY
+from sqlalchemy.orm import Session
+from app.database import SessionLocal, get_db
+from app.services import produto as produto_service
 
 # As tabelas são criadas e alteradas só pelo Alembic (alembic upgrade head).
 
@@ -33,9 +38,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 # em produção com HTTPS, acrescente https_only=True
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, max_age=60 * 60 * 8, same_site="lax")
 templates = Jinja2Templates(directory="app/templates")
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, max_age=60 * 60 * 8,same_site="lax", https_only=HTTPS_ONLY)
+protegido = [Depends(controle_de_acesso), Depends(verificar_csrf)]
 
+
+@app.get("/")
+def read_root(request: Request, usuario=Depends(usuario_atual), db: Session = Depends(get_db)):
+    alertas = produto_service.listar_produtos(db, abaixo_minimo=True)
+    return templates.TemplateResponse(request, "index.html", {"alertas": alertas})
 
 def _quer_html(request: Request) -> bool:
     return "text/html" in request.headers.get("accept", "")

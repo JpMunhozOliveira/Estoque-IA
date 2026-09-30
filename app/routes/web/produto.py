@@ -27,12 +27,11 @@ def _dados_form(nome, categoria, unidade, estoque_minimo, preco_custo, preco_ven
     }
 
 @router.get("/pagina")
-def pagina_produtos(request: Request, db: Session = Depends(get_db)):
-    produtos = produto_service.listar_produtos(db)
+def pagina_produtos(request: Request, abaixo_minimo: bool = False, db: Session = Depends(get_db)):
+    produtos = produto_service.listar_produtos(db, abaixo_minimo=abaixo_minimo)
     fornecedores = db.query(Fornecedor).all()
     return templates.TemplateResponse(request, "produtos.html", {
-        "produtos": produtos,
-        "fornecedores": fornecedores
+        "produtos": produtos, "fornecedores": fornecedores, "abaixo_minimo": abaixo_minimo,
     })
 
 @router.post("/novo")

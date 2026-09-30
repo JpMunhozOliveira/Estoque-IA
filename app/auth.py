@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Usuario
 from app.exceptions import RegraDeNegocioError, NaoAutenticadoError
+import secrets
 
 # Únicas escritas que o operador pode fazer
 OPERADOR_PODE = {("POST", "/movimentacoes/nova"), ("POST", "/movimentacoes/")}
@@ -26,4 +27,15 @@ def controle_de_acesso(request: Request, usuario: Usuario = Depends(usuario_atua
     if leitura or (request.method, caminho) in OPERADOR_PODE:
         return usuario
 
+    request.session.update({
+        "usuario_id": usuario.id, "usuario_nome": usuario.nome, "papel": usuario.papel,
+        "csrf_token": secrets.token_urlsafe(32),
+    })
+
     raise RegraDeNegocioError("Acesso negado: esta ação é permitida apenas para gestores.", status_code=403)
+
+
+OPERADOR_PODE = {("POST", "/movimentacoes/nova"), ("POST", "/movimentacoes/"),
+                 ("POST", "/usuarios/minha-senha")}
+# ...
+leitura = request.method in ("GET", "HEAD", "OPTIONS") and not caminho.endswith(("/editar", "/redefinir-senha"))

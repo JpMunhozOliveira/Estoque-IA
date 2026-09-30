@@ -32,3 +32,9 @@ def remover_cliente(db: Session, cliente: Cliente):
         )
     db.delete(cliente)
     db.commit()
+
+def buscar_cliente(db: Session, cliente_id: int) -> Cliente:
+    cliente = db.get(Cliente, cliente_id)
+    if not cliente:
+        raise RegraDeNegocioError("Cliente não encontrado", status_code=404)
+    return cliente

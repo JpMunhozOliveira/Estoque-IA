@@ -26,6 +26,10 @@ class Produto(Base):
 
     fornecedor = relationship("Fornecedor", back_populates="produtos")
 
+    @property
+    def abaixo_do_minimo(self) -> bool: 
+        return (self.estoque_minimo or 0) > 0 and (self.quantidade or 0) < self.estoque_minimo
+
 class Fornecedor(Base):
     __tablename__ = "fornecedores"
 
