@@ -8,6 +8,7 @@
     {% include "base/nav.html" %}
     <h1>Editar cliente</h1>
     <form method="post" action="/clientes/{{ cliente.id }}/editar">
+        {% include "base/csrf.html" %}
         <label>Nome</label>
         <input type="text" name="nome" value="{{ cliente.nome }}" required>
         <label>Contato</label>

@@ -3,21 +3,14 @@ from fastapi import Request, Form, APIRouter, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from typing import Optional
-from app.db.database import SessionLocal
-from app.services import movimentacao as movimentacao_service
+
+from app.db.database import get_db
 from app.core.auth import usuario_atual
+from app.services import movimentacao as movimentacao_service
 from app.models.models import Produto, Usuario, Cliente
 
 router = APIRouter(prefix="/movimentacoes", tags=["Movimentações - Web"])
 templates = Jinja2Templates(directory="app/templates")
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 @router.get("/pagina")
 def pagina_movimentacoes(request: Request, db: Session = Depends(get_db)):

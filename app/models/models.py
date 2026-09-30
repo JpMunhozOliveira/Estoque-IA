@@ -1,7 +1,7 @@
 from decimal import Decimal
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
 from app.db.database import Base
 
 class Produto(Base):

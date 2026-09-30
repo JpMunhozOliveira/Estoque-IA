@@ -23,6 +23,7 @@
 
     <h2>Nova movimentação</h2>
     <form method="post" action="/movimentacoes/nova">
+        {% include "base/csrf.html" %}
         <label>Produto</label>
         <select name="produto_id" required>
             {% for p in produtos %}

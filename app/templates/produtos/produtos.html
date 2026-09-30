@@ -36,6 +36,7 @@
             <td>
                 <a href="/produtos/{{ produto.id }}/editar">Editar</a>
                 <form method="post" action="/produtos/{{ produto.id }}/remover" style="display:inline">
+                    {% include "base/csrf.html" %}
                     <button type="submit">Remover</button>
                 </form>
             </td>

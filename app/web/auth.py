@@ -2,8 +2,10 @@ from fastapi import Request, Form, APIRouter, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+
 from app.db.database import get_db
 from app.services import usuario as usuario_service
+import secrets
 
 router = APIRouter(tags=["Autenticação"])
 templates = Jinja2Templates(directory="app/templates")
@@ -20,7 +22,7 @@ def entrar(request: Request, login: str = Form(...), senha: str = Form(...), db:
     if not usuario:
         return templates.TemplateResponse(request, "auth/login.html", {"erro": "Login ou senha inválidos"}, status_code=401)
     request.session.clear()
-    request.session.update({"usuario_id": usuario.id, "usuario_nome": usuario.nome, "papel": usuario.papel})
+    request.session.update({"usuario_id": usuario.id, "usuario_nome": usuario.nome, "papel": usuario.papel, "csrf_token": secrets.token_urlsafe(32),})
     return RedirectResponse(url="/", status_code=303)
 
 @router.post("/logout")

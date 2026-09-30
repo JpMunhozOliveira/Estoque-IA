@@ -6,7 +6,7 @@
 </head>
 <body>
     {% include "base/nav.html" %}
-    <h1>Alterar minha senha</h1>
+    <h1>Redefinir senha de {{ usuario.nome }}</h1>
     <form method="post" action="/usuarios/{{ usuario.id }}/redefinir-senha">
         {% include "base/csrf.html" %}
         <label>Nova senha (6 a 72 caracteres)</label>

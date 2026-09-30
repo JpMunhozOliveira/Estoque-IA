@@ -1,9 +1,7 @@
 from pydantic import ValidationError
 
-
 class RegraDeNegocioError(Exception):
     """Erro de regra de negócio (dado inválido, exclusão bloqueada, etc.).
-
     Os services levantam este erro; o main.py transforma em resposta HTTP.
     Assim os services não dependem do FastAPI e podem ser reaproveitados
     (por exemplo, pelas funções que o agente de IA vai chamar).
@@ -17,7 +15,6 @@ class RegraDeNegocioError(Exception):
 
 def validar(schema, dados: dict):
     """Valida um dict com um schema Pydantic e devolve o objeto validado.
-
     Se algo estiver errado, converte o erro do Pydantic em RegraDeNegocioError.
     """
     try:

@@ -9,6 +9,7 @@ Quantidade = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=3)]
 QuantidadeMovimentada = Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=3)]
 TipoMovimentacao = Literal["entrada", "saida"]
 
+# Produtos
 
 class ProdutoBase(BaseModel):
     nome: str
@@ -26,10 +27,11 @@ class ProdutoCreate(ProdutoBase):
 
 class ProdutoResponse(ProdutoBase):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     quantidade: Decimal
     criado_em: datetime
+
+# Fornecedores
 
 class FornecedorBase(BaseModel):
     nome: str
@@ -40,9 +42,9 @@ class FornecedorCreate(FornecedorBase):
 
 class FornecedorResponse(FornecedorBase):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
 
+# Clientes
 
 class ClienteBase(BaseModel):
     nome: str
@@ -53,17 +55,17 @@ class ClienteCreate(ClienteBase):
 
 class ClienteResponse(ClienteBase):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
 
+# Usuários
+
 Papel = Literal["operador", "gestor"]
+Senha = Annotated[str, Field(min_length=6, max_length=72)]  # 72 = limite do bcrypt
 
 class UsuarioBase(BaseModel):
     nome: str = Field(min_length=1)
     login: str = Field(min_length=1)
     papel: Papel = "operador"
-
-Senha = Annotated[str, Field(min_length=6, max_length=72)]  # 72 = limite do bcrypt
 
 class UsuarioCreate(UsuarioBase):
     senha: Senha
@@ -73,8 +75,9 @@ class SenhaNova(BaseModel):
 
 class UsuarioResponse(UsuarioBase):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
+
+# Movimentações
 
 class MovimentacaoBase(BaseModel):
     produto_id: int
@@ -88,7 +91,6 @@ class MovimentacaoCreate(MovimentacaoBase):
 
 class MovimentacaoResponse(MovimentacaoBase):
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     usuario_id: int
     data: datetime
