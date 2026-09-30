@@ -24,12 +24,14 @@
             <td>{{ produto.categoria or "-" }}</td>
             <td>{{ produto.quantidade }} {{ produto.unidade }}</td>
             <td>{{ produto.fornecedor.nome if produto.fornecedor else "-" }}</td>
+            {% if request.session.get("papel") == "gestor" %}
             <td>
                 <a href="/produtos/{{ produto.id }}/editar">Editar</a>
                 <form method="post" action="/produtos/{{ produto.id }}/remover" style="display:inline">
                     <button type="submit">Remover</button>
                 </form>
             </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </table>

@@ -8,3 +8,5 @@ alembic
 passlib[bcrypt]
 jinja2
 python-multipart
+itsdangerous
+bcrypt==4.0.1

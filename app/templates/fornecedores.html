@@ -13,12 +13,14 @@
         <tr>
             <td>{{ f.nome }}</td>
             <td>{{ f.contato or "-" }}</td>
+            {% if request.session.get("papel") == "gestor" %}
             <td>
                 <a href="/fornecedores/{{ f.id }}/editar">Editar</a>
                 <form method="post" action="/fornecedores/{{ f.id }}/remover" style="display:inline">
                     <button type="submit">Remover</button>
                 </form>
             </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </table>

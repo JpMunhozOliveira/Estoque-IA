@@ -42,13 +42,6 @@
         <label>Valor unitário</label>
         <input type="number" step="0.01" name="valor_unitario" min="0" value="0">
 
-        <label>Usuário responsável</label>
-        <select name="usuario_id" required>
-            {% for u in usuarios %}
-            <option value="{{ u.id }}">{{ u.nome }}</option>
-            {% endfor %}
-        </select>
-
         <label>Cliente (se for saída)</label>
         <select name="cliente_id">
             <option value="">Nenhum</option>

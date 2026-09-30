@@ -1,25 +1,50 @@
-from sqlalchemy.orm import Session
+import os
 from typing import Optional
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from app.models import Usuario, Movimentacao
-from app.exceptions import RegraDeNegocioError
+from app.schemas import UsuarioCreate
+from app.exceptions import RegraDeNegocioError, validar
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Usado quando o login não existe, para o tempo de resposta não revelar quais logins existem
+_HASH_FALSO = pwd_context.hash("senha-falsa")
+
+_MSG_LOGIN_DUPLICADO = "Já existe um usuário com esse login."
 
 def criar_usuario(db: Session, nome: str, login: str, senha: str, papel: str = "operador") -> Usuario:
-    novo = Usuario(nome=nome, login=login, papel=papel, senha_hash=pwd_context.hash(senha))
+    dados = validar(UsuarioCreate, {"nome": nome.strip(), "login": login.strip(), "senha": senha, "papel": papel})
+
+    if db.query(Usuario).filter(Usuario.login == dados.login).first():
+        raise RegraDeNegocioError(_MSG_LOGIN_DUPLICADO, status_code=409)
+
+    novo = Usuario(nome=dados.nome, login=dados.login, papel=dados.papel,
+                   senha_hash=pwd_context.hash(dados.senha))
     db.add(novo)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Corrida: dois cadastros do mesmo login ao mesmo tempo (a constraint UNIQUE segura)
+        db.rollback()
+        raise RegraDeNegocioError(_MSG_LOGIN_DUPLICADO, status_code=409)
     db.refresh(novo)
     return novo
+
+def autenticar(db: Session, login: str, senha: str) -> Optional[Usuario]:
+    usuario = db.query(Usuario).filter(Usuario.login == login.strip()).first()
+    senha_ok = pwd_context.verify(senha, usuario.senha_hash if usuario else _HASH_FALSO)
+    return usuario if (usuario and senha_ok) else None
 
 def listar_usuarios(db: Session, nome: Optional[str] = None):
     query = db.query(Usuario)
     if nome:
         query = query.filter(Usuario.nome.ilike(f"%{nome}%"))
-    return query.all()
+    return query.order_by(Usuario.nome).all()
 
-def remover_usuario(db: Session, usuario: Usuario):
+def remover_usuario(db: Session, usuario: Usuario, executor: Optional[Usuario] = None):
+    if executor and executor.id == usuario.id:
+        raise RegraDeNegocioError("Você não pode remover o seu próprio usuário.", status_code=409)
     total = db.query(Movimentacao).filter(Movimentacao.usuario_id == usuario.id).count()
     if total:
         raise RegraDeNegocioError(
@@ -28,3 +53,13 @@ def remover_usuario(db: Session, usuario: Usuario):
         )
     db.delete(usuario)
     db.commit()
+
+def criar_gestor_inicial(db: Session):
+    """Se não existir nenhum gestor, cria um a partir de ADMIN_LOGIN / ADMIN_SENHA."""
+    if db.query(Usuario).filter(Usuario.papel == "gestor").first():
+        return
+    login, senha = os.getenv("ADMIN_LOGIN"), os.getenv("ADMIN_SENHA")
+    if not login or not senha:
+        print("AVISO: não há gestor cadastrado e ADMIN_LOGIN/ADMIN_SENHA não foram definidos.")
+        return
+    criar_usuario(db, "Administrador", login, senha, "gestor")

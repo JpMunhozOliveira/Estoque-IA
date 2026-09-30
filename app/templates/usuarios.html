@@ -14,11 +14,13 @@
             <td>{{ u.nome }}</td>
             <td>{{ u.login }}</td>
             <td>{{ u.papel }}</td>
+            {% if request.session.get("papel") == "gestor" %}
             <td>
                 <form method="post" action="/usuarios/{{ u.id }}/remover" style="display:inline">
                     <button type="submit">Remover</button>
                 </form>
             </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </table>

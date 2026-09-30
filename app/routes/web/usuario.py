@@ -4,6 +4,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.services import usuario as usuario_service
+from app.auth import usuario_atual
+from app.models import Usuario
+
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários - Web"])
 templates = Jinja2Templates(directory="app/templates")
@@ -29,9 +32,8 @@ def criar_usuario_form(
     return RedirectResponse(url="/usuarios/pagina", status_code=303)
 
 @router.post("/{usuario_id}/remover")
-def remover_usuario_form(usuario_id: int, db: Session = Depends(get_db)):
-    from app.models import Usuario
-    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+def remover_usuario_form(usuario_id: int, db: Session = Depends(get_db), atual: Usuario = Depends(usuario_atual)):
+    usuario = db.get(Usuario, usuario_id)
     if usuario:
-        usuario_service.remover_usuario(db, usuario)
+        usuario_service.remover_usuario(db, usuario, atual)
     return RedirectResponse(url="/usuarios/pagina", status_code=303)

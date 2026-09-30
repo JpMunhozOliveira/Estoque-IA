@@ -28,3 +28,6 @@ def validar(schema, dados: dict):
             for e in erro.errors()
         )
         raise RegraDeNegocioError(detalhes, status_code=422)
+
+class NaoAutenticadoError(Exception):
+    """Usuário sem sessão válida."""

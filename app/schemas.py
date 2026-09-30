@@ -56,13 +56,15 @@ class ClienteResponse(ClienteBase):
 
     id: int
 
+Papel = Literal["operador", "gestor"]
+
 class UsuarioBase(BaseModel):
-    nome: str
-    login: str
-    papel: str = "operador"
+    nome: str = Field(min_length=1)
+    login: str = Field(min_length=1)
+    papel: Papel = "operador"
 
 class UsuarioCreate(UsuarioBase):
-    senha: str  # senha em texto puro, só na entrada — nunca fica salva assim
+    senha: str = Field(min_length=6, max_length=72)  # 72 = limite do bcrypt
 
 class UsuarioResponse(UsuarioBase):
     model_config = ConfigDict(from_attributes=True)
@@ -71,7 +73,6 @@ class UsuarioResponse(UsuarioBase):
 
 class MovimentacaoBase(BaseModel):
     produto_id: int
-    usuario_id: int
     cliente_id: Optional[int] = None
     tipo: TipoMovimentacao
     quantidade: QuantidadeMovimentada
@@ -84,4 +85,5 @@ class MovimentacaoResponse(MovimentacaoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    usuario_id: int
     data: datetime

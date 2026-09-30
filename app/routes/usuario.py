@@ -5,6 +5,7 @@ from app.database import SessionLocal
 from app.models import Usuario
 from app.schemas import UsuarioCreate, UsuarioResponse
 from app.services import usuario as usuario_service
+from app.auth import usuario_atual
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários"])
 
@@ -31,9 +32,9 @@ def buscar_usuario(usuario_id: int, db: Session = Depends(get_db)):
     return usuario
 
 @router.delete("/{usuario_id}")
-def remover_usuario(usuario_id: int, db: Session = Depends(get_db)):
-    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+def remover_usuario(usuario_id: int, db: Session = Depends(get_db), atual: Usuario = Depends(usuario_atual)):
+    usuario = db.get(Usuario, usuario_id)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    usuario_service.remover_usuario(db, usuario)
+    usuario_service.remover_usuario(db, usuario, atual)
     return {"mensagem": "Usuário removido com sucesso"}
