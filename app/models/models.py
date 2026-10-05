@@ -21,10 +21,7 @@ class Produto(Base):
     estoque_minimo = Column(Numeric(12, 3), default=Decimal("0"))
     preco_custo = Column(Numeric(12, 2), default=Decimal("0"))
     preco_venda = Column(Numeric(12, 2), default=Decimal("0"))
-    fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"), nullable=True)
     criado_em = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
-    fornecedor = relationship("Fornecedor", back_populates="produtos")
 
     @property
     def abaixo_do_minimo(self) -> bool: 
@@ -36,8 +33,6 @@ class Fornecedor(Base):
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String, nullable=False)
     contato = Column(String, nullable=True)
-
-    produtos = relationship("Produto", back_populates="fornecedor")
 
 
 class Cliente(Base):

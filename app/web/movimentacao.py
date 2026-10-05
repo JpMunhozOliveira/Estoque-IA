@@ -1,16 +1,16 @@
 from decimal import Decimal
 from fastapi import Request, Form, APIRouter, Depends
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.core.auth import usuario_atual
+from app.core.formatacao import parse_reais
+from app.core.templates import templates
 from app.services import movimentacao as movimentacao_service
 from app.models.models import Produto, Usuario, Cliente, Fornecedor
 
 router = APIRouter(prefix="/movimentacoes", tags=["Movimentações - Web"])
-templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/pagina")
 def pagina_movimentacoes(
@@ -31,7 +31,7 @@ def criar_movimentacao_form(
     fornecedor_id: str = Form(""),
     tipo: str = Form(...), 
     quantidade: Decimal = Form(...),
-    valor_unitario: Decimal = Form(Decimal("0")),
+    valor_unitario: str = Form("0"),
     documento: str = Form(""), 
     observacao: str = Form(""), 
     motivo_ajuste: str = Form(""),
@@ -42,7 +42,9 @@ def criar_movimentacao_form(
         "produto_id": produto_id,
         "cliente_id": int(cliente_id) if cliente_id else None,
         "fornecedor_id": int(fornecedor_id) if fornecedor_id else None,
-        "tipo": tipo, "quantidade": quantidade, "valor_unitario": valor_unitario,
+        "tipo": tipo, 
+        "quantidade": quantidade, 
+        "valor_unitario": parse_reais(valor_unitario, "Valor unitário"),
         "documento": documento.strip() or None,
         "observacao": observacao.strip() or None,
         "motivo_ajuste": motivo_ajuste or None,

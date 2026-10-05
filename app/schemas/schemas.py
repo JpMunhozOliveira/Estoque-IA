@@ -17,7 +17,6 @@ class ProdutoBase(BaseModel):
     estoque_minimo: Quantidade = Decimal("0")
     preco_custo: Dinheiro = Decimal("0")
     preco_venda: Dinheiro = Decimal("0")
-    fornecedor_id: Optional[int] = None
 
 class ProdutoCreate(ProdutoBase):
     # "quantidade" não é campo de entrada: o estoque só muda por Movimentação.

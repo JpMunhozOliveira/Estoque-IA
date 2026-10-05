@@ -25,23 +25,19 @@
         <label>Estoque mínimo</label>
         <input type="number" step="0.001" name="estoque_minimo" min="0" value="{{ produto.estoque_minimo }}">
 
-        <label>Preço de custo</label>
-        <input type="number" step="0.01" name="preco_custo" min="0" value="{{ produto.preco_custo }}">
+         <label>Preço de custo</label>
+        <input type="text" inputmode="numeric" class="reais" name="preco_custo" value="{{ produto.preco_custo|reais_input }}" maxlength="16">
 
         <label>Preço de venda</label>
-        <input type="number" step="0.01" name="preco_venda" min="0" value="{{ produto.preco_venda }}">
+        <input type="text" inputmode="numeric" class="reais" name="preco_venda" value="{{ produto.preco_venda|reais_input }}" maxlength="16">
 
-        <label>Fornecedor</label>
-        <select name="fornecedor_id">
-            <option value="">Nenhum</option>
-            {% for f in fornecedores %}
-            <option value="{{ f.id }}" {% if produto.fornecedor_id==f.id %}selected{% endif %}>{{ f.nome }}</option>
-            {% endfor %}
-        </select>
+        <p>Fornecedores (a partir das entradas):
+        <strong>{{ fornecedores|map(attribute="nome")|join(", ") if fornecedores else "nenhum ainda" }}</strong></p>
 
         <button type="submit">Salvar</button>
     </form>
     <a href="/produtos/pagina">Voltar</a>
+    <script src="/static/reais.js"></script>
 </body>
 
 </html>

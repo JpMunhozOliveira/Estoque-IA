@@ -6,7 +6,6 @@ from app.models.models import Movimentacao, Produto, Cliente, Fornecedor, Usuari
 
 def criar_movimentacao(db: Session, dados: dict, usuario_id: int) -> Movimentacao:
     mov = validar(MovimentacaoCreate, dados)
-
     # with_for_update trava a linha: duas saídas simultâneas não passam da validação juntas
     produto = (
         db.query(Produto).filter(Produto.id == mov.produto_id).with_for_update().first()
