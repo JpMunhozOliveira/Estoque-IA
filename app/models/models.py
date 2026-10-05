@@ -61,20 +61,26 @@ class Usuario(Base):
 class Movimentacao(Base):
     __tablename__ = "movimentacoes"
     __table_args__ = (
-        CheckConstraint("quantidade > 0", name="ck_movimentacoes_quantidade_positiva"),
+        CheckConstraint("(tipo = 'ajuste' AND quantidade <> 0) OR (tipo <> 'ajuste' AND quantidade > 0)",name="ck_movimentacoes_quantidade_valida",),
         CheckConstraint("valor_unitario >= 0", name="ck_movimentacoes_valor_unitario_nao_negativo"),
-        CheckConstraint("tipo IN ('entrada', 'saida')", name="ck_movimentacoes_tipo_valido"),
+        CheckConstraint("tipo IN ('entrada', 'saida', 'ajuste')", name="ck_movimentacoes_tipo_valido"),
+        CheckConstraint("(tipo = 'ajuste') = (motivo_ajuste IS NOT NULL)", name="ck_movimentacoes_motivo_so_no_ajuste"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
     produto_id = Column(Integer, ForeignKey("produtos.id"), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=True)
-    tipo = Column(String, nullable=False)  # "entrada" ou "saida"
-    quantidade = Column(Numeric(12, 3), nullable=False)
+    fornecedor_id = Column(Integer, ForeignKey("fornecedores.id"), nullable=True)
+    tipo = Column(String, nullable=False)  # "entrada", "saida" ou "ajuste"
+    quantidade = Column(Numeric(12, 3), nullable=False)  # no ajuste, é a diferença (com sinal)
     valor_unitario = Column(Numeric(12, 2), default=Decimal("0"))
+    documento = Column(String(60), nullable=True)      # ex.: "NF-12345"
+    observacao = Column(String(500), nullable=True)
+    motivo_ajuste = Column(String(30), nullable=True)  # só quando tipo == "ajuste"
     data = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     produto = relationship("Produto")
     usuario = relationship("Usuario")
     cliente = relationship("Cliente")
+    fornecedor = relationship("Fornecedor")

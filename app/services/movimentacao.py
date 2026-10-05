@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.models.models import Movimentacao, Produto
 from app.schemas.schemas import MovimentacaoCreate
 from app.core.exceptions import RegraDeNegocioError, validar
-from app.models.models import Movimentacao, Produto, Cliente
+from app.models.models import Movimentacao, Produto, Cliente, Fornecedor, Usuario
 
 def criar_movimentacao(db: Session, dados: dict, usuario_id: int) -> Movimentacao:
     mov = validar(MovimentacaoCreate, dados)
@@ -14,17 +13,23 @@ def criar_movimentacao(db: Session, dados: dict, usuario_id: int) -> Movimentaca
     )
     if not produto:
         raise RegraDeNegocioError("Produto não encontrado", status_code=404)
-
     if mov.cliente_id and not db.get(Cliente, mov.cliente_id):
         raise RegraDeNegocioError("Cliente não encontrado", status_code=404)
+    if mov.fornecedor_id and not db.get(Fornecedor, mov.fornecedor_id):
+        raise RegraDeNegocioError("Fornecedor não encontrado", status_code=404)
+    if mov.tipo == "ajuste":
+            usuario = db.get(Usuario, usuario_id)
+            if not usuario or usuario.papel != "gestor":
+                raise RegraDeNegocioError("Apenas gestores podem registrar ajustes.", status_code=403)
 
-    if mov.tipo == "saida" and produto.quantidade < mov.quantidade:
-        raise RegraDeNegocioError("Quantidade insuficiente em estoque", status_code=400)
-
-    if mov.tipo == "entrada":
-        produto.quantidade += mov.quantidade
-    else:
-        produto.quantidade -= mov.quantidade
+    # Saída subtrai; entrada soma; ajuste já vem com sinal
+    delta = -mov.quantidade if mov.tipo == "saida" else mov.quantidade
+    novo_saldo = produto.quantidade + delta
+    if novo_saldo < 0:
+        msg = ("Quantidade insuficiente em estoque" if mov.tipo == "saida"
+               else "O ajuste deixaria o estoque negativo")
+        raise RegraDeNegocioError(msg, status_code=400)
+    produto.quantidade = novo_saldo
 
     nova = Movimentacao(**mov.model_dump(), usuario_id=usuario_id)
     db.add(nova)

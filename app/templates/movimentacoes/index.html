@@ -1,22 +1,39 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Estoque - Movimentações</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
     {% include "base/nav.html" %}
     <h1>Movimentações</h1>
     <table>
-        <tr><th>Data</th><th>Produto</th><th>Tipo</th><th>Quantidade</th><th>Usuário</th><th>Cliente</th></tr>
+        <tr>
+            <th>Data</th>
+            <th>Produto</th>
+            <th>Tipo</th>
+            <th>Quantidade</th>
+            <th>Origem/Destino</th>
+            <th>Documento</th>
+            <th>Motivo / Obs.</th>
+            <th>Usuário</th>
+        </tr>
         {% for m in movimentacoes %}
         <tr>
             <td>{{ m.data.strftime("%d/%m/%Y %H:%M") }}</td>
             <td>{{ m.produto.nome }}</td>
             <td>{{ m.tipo }}</td>
             <td>{{ m.quantidade }}</td>
+            <td>
+                {% if m.tipo == "entrada" %}{{ m.fornecedor.nome if m.fornecedor else "-" }}
+                {% elif m.tipo == "saida" %}{{ m.cliente.nome if m.cliente else "-" }}
+                {% else %}-{% endif %}
+            </td>
+            <td>{{ m.documento or "-" }}</td>
+            <td>{{ m.motivo_ajuste or "" }}{% if m.observacao %} {{ m.observacao }}{% endif %}</td>
             <td>{{ m.usuario.nome }}</td>
-            <td>{{ m.cliente.nome if m.cliente else "-" }}</td>
         </tr>
         {% endfor %}
     </table>
@@ -32,26 +49,71 @@
         </select>
 
         <label>Tipo</label>
-        <select name="tipo" required>
+        <select name="tipo" id="tipo" required>
             <option value="entrada">Entrada</option>
             <option value="saida">Saída</option>
+            {% if request.session.get("papel") == "gestor" %}
+            <option value="ajuste">Ajuste de inventário</option>
+            {% endif %}
         </select>
 
-        <label>Quantidade</label>
-        <input type="number" step="0.001" min="0.001" name="quantidade" required>
+        <label>Quantidade <small id="dica-qtd"></small></label>
+        <input type="number" step="0.001" name="quantidade" required>
 
         <label>Valor unitário</label>
         <input type="number" step="0.01" name="valor_unitario" min="0" value="0">
 
-        <label>Cliente (se for saída)</label>
-        <select name="cliente_id">
-            <option value="">Nenhum</option>
-            {% for c in clientes %}
-            <option value="{{ c.id }}">{{ c.nome }}</option>
-            {% endfor %}
-        </select>
+        <div id="campo-fornecedor">
+            <label>Fornecedor (origem da entrada)</label>
+            <select name="fornecedor_id">
+                <option value="">Nenhum</option>
+                {% for f in fornecedores %}<option value="{{ f.id }}">{{ f.nome }}</option>{% endfor %}
+            </select>
+        </div>
+
+        <div id="campo-cliente">
+            <label>Cliente (destino da saída)</label>
+            <select name="cliente_id">
+                <option value="">Nenhum</option>
+                {% for c in clientes %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}
+            </select>
+        </div>
+
+        <div id="campo-motivo">
+            <label>Motivo do ajuste</label>
+            <select name="motivo_ajuste">
+                <option value="avaria">Avaria</option>
+                <option value="perda">Perda</option>
+                <option value="contagem">Contagem</option>
+                <option value="erro_lancamento">Erro de lançamento</option>
+                <option value="divergencia">Divergência</option>
+                <option value="outro">Outro</option>
+            </select>
+        </div>
+
+        <label>Documento (ex.: NF-12345)</label>
+        <input type="text" name="documento" maxlength="60">
+        <label>Observação</label>
+        <input type="text" name="observacao" maxlength="500">
 
         <button type="submit">Registrar</button>
+
     </form>
+    <script>
+        const tipo = document.getElementById("tipo");
+        function atualizar() {
+            const t = tipo.value;
+            document.getElementById("campo-fornecedor").style.display = t === "entrada" ? "" : "none";
+            document.getElementById("campo-cliente").style.display = t === "saida" ? "" : "none";
+            const motivo = document.getElementById("campo-motivo");
+            motivo.style.display = t === "ajuste" ? "" : "none";
+            motivo.querySelector("select").disabled = t !== "ajuste";  // não envia o campo fora do ajuste
+            document.getElementById("dica-qtd").textContent =
+                t === "ajuste" ? "(diferença: negativa para perda, positiva para sobra)" : "";
+        }
+        tipo.addEventListener("change", atualizar);
+        atualizar();
+    </script>
 </body>
+
 </html>
